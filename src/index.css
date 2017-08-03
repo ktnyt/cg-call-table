@@ -1,4 +1,5 @@
 @import url(https://fonts.googleapis.com/earlyaccess/notosansjapanese.css);
+@import url(https://fonts.googleapis.com/icon?family=Material+Icons);
 
 body {
   margin: 0;
@@ -6,6 +7,6 @@ body {
   font-family: 'Noto Sans Japanese', sans-serif;
 }
 
-input.disable_focus:focus {
+*:focus {
   outline: 0;
 }
