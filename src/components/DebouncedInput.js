@@ -1,13 +1,24 @@
 import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 
 export class DebouncedInput extends Component {
-  state = { handler: false }
+  handler = false
 
-  handleDebounce = (fn, delay) => event => {
+  static propTypes = {
+    delay: PropTypes.number,
+    onChange: PropTypes.func,
+  }
+
+  static defaultProps = {
+    delay: 1000,
+    onChange: () => {}
+  }
+
+  handleDebounce = event => {
+    const { delay, onChange } = this.props
     event.persist()
-    if(this.state.handler) { clearTimeout(this.state.handler) }
-    const handler = setTimeout(() => fn(event), delay)
-    this.setState({ handler })
+    if(this.handler) clearTimeout(this.handler)
+    this.handler = setTimeout(() => onChange(event), delay)
   }
 
   render = () => {
@@ -16,7 +27,8 @@ export class DebouncedInput extends Component {
       onChange,
       ...props,
     } = this.props
-    return (<input onChange={this.handleDebounce(onChange, delay ? delay : 1000)} {...props} />)
+
+    return (<input {...props} onChange={this.handleDebounce}  />)
   }
 }
 
