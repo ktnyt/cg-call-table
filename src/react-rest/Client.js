@@ -1,42 +1,21 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 
-import { createClient } from 'fetch-plus'
-import plusJson from 'fetch-plus-json'
-
-class Counter {
-  count = 0
-
-  increment = fn => {
-    this.count += 1
-    fn(this.count)
-  }
-
-  decrement = fn => {
-    this.count -= 1
-    fn(this.count)
-  }
-}
-
 class Client extends Component {
-  state = { active: 0 }
-
-  counter = new Counter()
-
   static propTypes = {
-    component: PropTypes.func,
-    render: PropTypes.func,
-    children: PropTypes.oneOfType([
-      PropTypes.func,
-      PropTypes.node,
+    base: PropTypes.string.isRequired,
+    path: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.array,
     ]),
-    url: PropTypes.string.isRequired,
-    headers: PropTypes.object,
+    middleware: PropTypes.array,
+    children: PropTypes.node.isRequired,
   }
 
   static defaultProps = {
-      headers: {},
-    }
+    path: [],
+    middleware: [],
+  }
 
   static contextTypes = {
     rest: PropTypes.object,
@@ -46,48 +25,23 @@ class Client extends Component {
     rest: PropTypes.object.isRequired,
   }
 
-  handleStart = arg => {
-    this.counter.increment(active => this.setState({ active }))
-    return arg
-  }
-
-  handleEnd = arg => {
-    this.counter.decrement(active => this.setState({ active }))
-    return arg
-  }
-
   getChildContext = () => {
-    const { url, headers } = this.props
+    const { base, path: propPath, middleware } = this.props
 
-    const client = createClient(url, { headers }, [plusJson()])
+    const path = Array.isArray(propPath) ? propPath : [propPath]
 
     return {
       rest: {
         ...this.context.rest,
-        client,
-        path: '',
-        start: this.handleStart,
-        end: this.handleEnd,
-      }
+        base,
+        path,
+        middleware,
+      },
     }
   }
 
   render = () => {
-    const { component, render, children } = this.props
-
-    return (
-      component ? (
-        React.createElement(component)
-      ) : render ? (
-        render()
-      ) : children ? (
-        typeof children === 'function' ? (
-          children()
-        ) : !Array.isArray(children) || children.length ? (
-          React.cloneElement(React.Children.only(children))
-        ) : null
-      ) : null
-    )
+    return React.Children.only(this.props.children)
   }
 }
 
