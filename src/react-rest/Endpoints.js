@@ -1,64 +1,74 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 
+import _ from 'lodash'
+
 import Handlers from './Handlers'
+import { createMiddleware, bypassMiddleware } from './middleware'
+import { toProp } from './utils'
 
-import { objectEq } from './utils'
-
-const defaults = {
-  identifier: '',
+const defaultConfig = {
+  pk: '',
   params: {},
-  fetchOnMount: false,
+  middleware: [],
+  noFetchOnMount: false,
   suppressUpdate: false,
+  persist: false,
 }
 
-const constructPath = (path0, path1) => {
-  return path0[0] === '/' ? path0 : `${path1}/${path0}`
-}
+const joinPath = (pathA, pathB) => Array.isArray(pathB) ? (
+  pathB[0][0] === '/' ? pathB : [...pathA, ...pathB]
+) : (joinPath(pathA, [pathB]))
 
 class Endpoints extends Component {
-  state = {}
   handlers = {}
 
   static propTypes = {
+    configs: PropTypes.object.isRequired,
     component: PropTypes.func,
     render: PropTypes.func,
     children: PropTypes.oneOfType([
       PropTypes.func,
       PropTypes.node,
     ]),
-
-    specs: PropTypes.object.isRequired,
   }
 
   static contextTypes = {
     rest: PropTypes.shape({
-      client: PropTypes.object.isRequired,
-      path: PropTypes.string.isRequired,
-      start: PropTypes.func.isRequired,
-      end: PropTypes.func.isRequired,
-    }),
+      base: PropTypes.string.isRequired,
+      path: PropTypes.array.isRequired,
+      headers: PropTypes.object,
+    })
   }
 
   static childContextTypes = {
-    rest: PropTypes.object.isRequired,
+    router: PropTypes.object.isRequired,
   }
 
-  getChildContext = () => ({
-    rest: {
-      ...this.context.rest,
+  getChildContext = () => {
+    const { configs } = this.props
+    const { base, path: contextPath, middleware } = this.context
+
+    const persist = Object.keys(configs).map(config => ({ ...defaultConfig, ...config })).find(toProp('persist'))
+
+    const path = persist ? joinPath(contextPath, persist.path) : contextPath
+
+    return {
+      router: {
+        ...this.context.router,
+        base,
+        path,
+        middleware,
+      }
     }
-  })
+  }
 
   constructor(props, context) {
     super(props, context)
 
-    const { specs } = this.props
-
-    const names = Object.keys(specs)
-
+    const { configs } = this.props
+    const names = Object.keys(configs)
     const state = {}
-
     for(const name of names) {
       state[name] = false
     }
@@ -67,62 +77,74 @@ class Endpoints extends Component {
   }
 
   componentWillMount = () => {
-    const { specs } = this.props
-    const { client, start, end, path: contextPath } = this.context.rest
+    const { configs } = this.props
+    const { rest } = this.context
 
-    const names = Object.keys(specs)
+    this.createhandlers(configs, rest)
 
-    for(const name of names) {
-      const {
-        path: specPath,
-        identifier,
-        params,
-        fetchOnMount,
-      } = { ...defaults, ...specs[name] }
-
-      const path = constructPath(specPath, contextPath)
-
-      this.handlers[name] = new Handlers(client, path)
-      .decorate(start, end)
-      .bindParams(params)
-      .bindIdentifier(identifier)
-      .bindCallback(data => this.setState({ [name]: data }))
-
-      if(fetchOnMount) this.handlers[name].fetch()
+    for(const name of Object.keys(configs)) {
+      if(!configs[name].noFetchOnMount) {
+        this.handlers[name].refresh()
+      }
     }
   }
 
   componentWillReceiveProps = (nextProps, nextContext) => {
-    const { specs: prevSpecs } = this.props
-    const { specs: nextSpecs } = nextProps
+    if(!_.isEqual(this.context.rest, nextContext.rest) || !_.isEqual(this.props.configs, nextProps.configs)) {
+      const { configs } = nextProps
+      const { rest } = nextContext
 
-    const { client, start, end, path: contextPath } = this.context.rest
+      this.createhandlers(configs, rest)
 
-    const names = Object.keys(nextSpecs)
-
-    for(const name of names) {
-      const {
-        path: prevPath,
-        identifier: prevIdentifier,
-        params: prevParams,
-      } = { ...defaults, ...prevSpecs[name] }
-
-      const {
-        path: nextPath,
-        identifier: nextIdentifier,
-        params: nextParams,
-        suppressUpdate,
-      } = { ...defaults, ...nextSpecs[name] }
-
-      if(prevPath !== nextPath || prevIdentifier !== nextIdentifier || !objectEq(prevParams, nextParams)) {
-        this.handlers[name] = new Handlers(client, constructPath(nextPath, contextPath))
-        .decorate(start, end)
-        .bindParams(nextParams)
-        .bindIdentifier(nextIdentifier)
-        .bindCallback(data => this.setState({ [name]: data }))
-
-        if(!suppressUpdate) this.handlers[name].fetch()
+      for(const name of Object.keys(configs)) {
+        if(!configs[name].suppressUpdate) {
+          this.handlers[name].refresh()
+        }
       }
+    }
+  }
+
+  updateData = name => nextData => {
+    const currData = this.state.data
+    const data = { ...currData, nextData }
+    this.setData(name)(data)
+  }
+
+  setData = name => data => this.setState({ [name]: data })
+
+  createhandlers = (configs, rest) => {
+    const { base, path: contextPath, middleware: contextMiddleware } = rest
+
+    for(const name of Object.keys(configs)) {
+      const {
+        path: configPath,
+        pk,
+        params,
+        middleware: configMiddleware,
+      } = { ...defaultConfig, ...configs[name] }
+
+      const path = joinPath(contextPath, configPath)
+      const middleware = [...contextMiddleware, ...configMiddleware]
+      const handlers = new Handlers(base, path, middleware).bindParams(params)
+
+      if(pk.length) {
+        handlers.bindPrimaryKey(pk)
+        handlers.addMiddleware(bypassMiddleware(this.updateData(name)))
+      } else {
+        const refreshMiddleware = createMiddleware(o=>o, (response, request) => {
+          if(request.hasOwnProperty('method') && request.method !== 'GET') {
+            handlers.browse().then(this.setData(name))
+          } else {
+            this.setData(name)(response)
+          }
+
+          return response
+        })
+
+        handlers.addMiddleware(refreshMiddleware)
+      }
+
+      this.handlers[name] = handlers
     }
   }
 

@@ -1,92 +1,64 @@
-const buildParams = params => {
+import 'whatwg-fetch'
+import { fetchWithMiddleware } from './middleware'
+
+export const buildParams = params => {
   if(!params) return ''
-
   const keys = Object.keys(params)
-
   if(keys.length === 0) return ''
-
   return `?${keys.map(key => `${key}=${params[key]}`).join('&')}`
 }
 
+const buildUrl = (base, path, params) => `${base}/${path.join('/')}${buildParams(params)}`
+
 class Handlers {
-  before = o => o
-  after = o => o
+  constructor(base, path, middleware=[]) {
+    this.base = base
+    this.path = Array.isArray(path) ? path : [path]
+    this.middleware = middleware
 
-  constructor(client, path) {
-    this.client = client
-    this.path = path
+    this.browse = this._browse
+    this.read = this._read
+    this.edit = this._edit
+    this.add = this._add
+    this.destroy = this._destroy
+    this.replace = this._replace
+    this.wipe = this._wipe
+    this.refresh = () => this.browse()
+    this.fetch = fetchWithMiddleware(this.middleware)
   }
 
-  clone = (decorate=false) => {
-    const cloned = new Handlers(this.client, this.path)
-    if(decorate) {
-      cloned.before = this.before
-      cloned.after = this.after
-    }
-    return cloned
-  }
-
-  internal = {
-    browse: params => this.before(this.client.browse(this.path + buildParams(params))).then(this.after).then(this.callback),
-    read: identifier => this.before(this.client.read(`${this.path}/${identifier}`)).then(this.after).then(this.callback),
-    edit: (identifier, body) => this.before(this.client.edit(`${this.path}/${identifier}`, { body })).then(this.fetch).then(this.after).then(this.callback),
-    add: body => this.before(this.client.add(this.path, { body })).then(this.fetch).then(this.after).then(this.callback),
-    destroy: identifier => this.before(this.client.destroy(`${this.path}/${identifier}`)).then(this.fetch).then(this.after).then(this.callback),
-    wipe: params => this.before(this.client.destroy(this.path + buildParams(params))).then(this.fetch).then(this.after).then(this.callback),
-    create: body => this.before(this.client.add(this.path, { body })).then(this.after).then(this.callback),
-    replace: (identifier, body) => this.before(this.client.replace(`${this.path}/${identifier}`, { body })).then(this.fetch).then(this.after).then(this.callback),
-  }
-
-  decorate = (before, after) => {
-    this.before = data => {
-      before(data)
-      return data
-    }
-    this.after = data => {
-      after(data)
-      return data
-    }
-    return this
-  }
-
-  bindIdentifier = identifier => {
-    if(identifier.length) {
-      delete this.browse
-      delete this.add
-      delete this.wipe
-      this.read = () => this.internal.read(identifier)
-      this.edit = body => this.internal.edit(identifier, body)
-      this.destroy = () => this.internal.destroy(identifier)
-      this.replace = body => this.internal.replace(identifier, body)
-      this.fetch = (f=o=>o) => this.internal.read(identifier).then(f)
-    }
+  addMiddleware = middleware => {
+    this.middleware.push(middleware)
+    this.fetch = fetchWithMiddleware(this.middleware)
     return this
   }
 
   bindParams = params => {
-    this.browse = options => this.internal.browse({...params, ...options})
-    this.wipe = options => this.internal.wipe({...params, ...options})
-    this.fetch = (f=o=>o) => this.internal.browse(params).then(f)
+    this.browse = options => this._browse({ ...params, ...options })
+    this.wipe = options => this._wipe({ ...params, ...options })
+    this.refresh = () => this.browse()
     return this
   }
 
-  bindCallback = callback => {
-    this.callback = data => {
-      callback(data)
-      return data
-    }
+  bindPrimaryKey = pk => {
+    delete this.browse
+    delete this.add
+    delete this.wipe
+    this.read = () => this._read(pk)
+    this.edit = body => this._edit(pk, body)
+    this.destroy = () => this._destroy(pk)
+    this.replace = body => this._replace(pk, body)
+    this.refresh = () => this.read()
     return this
   }
 
-  browse = this.internal.browse
-  read = this.internal.read
-  edit = this.internal.edit
-  add = this.internal.add
-  destroy = this.internal.destroy
-  wipe = this.internal.wipe
-  create = this.internal.create
-  replace = this.internal.replace
-  fetch = f => this.browse().then(f)
+  _browse = params => this.fetch(buildUrl(this.base, [...this.path], params))
+  _read = pk => this.fetch(buildUrl(this.base, [...this.path, pk]))
+  _edit = (pk, body) => this.fetch(buildUrl(this.base, [...this.path, pk]), { method: 'PATCH', body })
+  _add = body => this.fetch(buildUrl(this.base, [...this.path]), { method: 'POST', body })
+  _destroy = pk => this.fetch(buildUrl(this.base, [...this.path, pk]), { method: 'DELETE' })
+  _replace = (pk, body) => this.fetch(buildUrl(this.base, [...this.path, pk]), { method: 'PUT', body })
+  _wipe = params => this.fetch(buildUrl(this.base, [...this.path], params), { method: 'DELETE' })
 }
 
 export default Handlers

@@ -9,7 +9,7 @@ export const cellColor = {
   cute: ['#f8adcc', '#fcc9de'],
   cool: ['#9ab3ff', '#ccdaff'],
   pasn: ['#fee3b3', '#feeccc'],
-  rest: ['#d9d9d9', '#eaeaea'],
+  rest: ['#80fba2', '#b4fcc4'],
 }
 
 export const getCellColor = (character, index) => cellColor[character.type][index % 2]

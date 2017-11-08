@@ -1,8 +1,4 @@
-export const sortedKeys = object => Object.keys(object).sort()
-export const sortedValues = object => Object.keys(object).sort().map(key => object[key])
-
-export const zip = (a, b) => a.length > b.length ? b.map((d, i) => [a[i], d]) : a.map((c, i) => [c, b[i]])
-export const arrayEq = (a, b) => zip(a, b).map(([c, d]) => c === d).reduce((p, c) => p && c, true)
-export const keysEq = (a ,b) => arrayEq(Object.keys(a), Object.keys(b))
-export const valuesEq = (a, b) => arrayEq(sortedValues(a), sortedValues(b))
-export const objectEq = (a, b) => keysEq(a, b) && valuesEq(a, b)
+export const bypass = f => a => { f(a); return a }
+export const combine = fs => a => fs.reduce((b, f) => f(b), a)
+export const chain = fs => (a, ...rest) => fs.reduce((b, f) => b.then(c => f(c, ...rest)), a)
+export const toProp = prop => object => object[prop]
