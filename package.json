@@ -6,9 +6,9 @@
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-jss": "^8.2.0",
-    "react-rest-client": "^1.0.0-rc.18",
     "react-scripts": "1.0.17",
-    "react-virtualized": "^9.14.1"
+    "react-virtualized": "^9.14.1",
+    "shortid": "^2.2.8"
   },
   "scripts": {
     "start": "react-scripts start",
