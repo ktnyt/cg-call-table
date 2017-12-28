@@ -10,13 +10,13 @@ const Table = ({ table }) => (
     {({ height, scrollTop }) => (
       <List
         autoHeight
-        width={800}
+        width={600}
         height={height}
         rowCount={table.length}
-        rowHeight={22}
+        rowHeight={24}
         rowRenderer={({ key, index, style }) => (
           <div key={key} style={style}>
-            <Entry {...table[index]} />
+            <Entry even={index % 2 === 0} {...table[index]} />
           </div>
         )}
         scrollTop={scrollTop}
