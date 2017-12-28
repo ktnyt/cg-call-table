@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react'
-import { ThemeProvider } from 'react-jss'
+import injectSheet, { ThemeProvider } from 'react-jss'
 
 import Filters from './components/Filters'
 import Table from './components/Table'
@@ -7,7 +7,7 @@ import Table from './components/Table'
 import handlers from './handlers'
 
 const theme = {
-  colors: {
+  pallete: {
     cute: ['#f8adcc', '#fcc9de'],
     cool: ['#9ab3ff', '#ccdaff'],
     pasn: ['#fee3b3', '#feeccc'],
@@ -16,7 +16,14 @@ const theme = {
   cell: {
     padding: 3,
     width: 200,
-    height: 22,
+    height: 24,
+  },
+}
+
+const styles = {
+  container: {
+    margin: 'auto',
+    width: 600,
   },
 }
 
@@ -51,6 +58,8 @@ class App extends Component {
   }
 
   render = () => {
+    const { classes } = this.props
+
     const {
       characters,
       character_readings,
@@ -85,21 +94,17 @@ class App extends Component {
 
     return (
       <ThemeProvider theme={theme}>
-        <Fragment>
-          <div>
-            <Filters
-              onChangeCaller={changeCaller}
-              onChangeCallee={changeCallee}
-              onChangeCalled={changeCalled}
-            />
-          </div>
-          <div>
-            <Table table={filtered} />
-          </div>
-        </Fragment>
+        <div className={classes.container}>
+          <Filters
+            onChangeCaller={changeCaller}
+            onChangeCallee={changeCallee}
+            onChangeCalled={changeCalled}
+          />
+          <Table table={filtered} />
+        </div>
       </ThemeProvider>
     )
   }
 }
 
-export default App
+export default injectSheet(styles)(App)
