@@ -99,7 +99,7 @@ class App extends Component {
       const caller = callers[0]
       const callee = callers[0]
       const called = event.target.called.value
-      const remark = event.target.remark.value
+      const remark = theme.full ? event.target.remark.value : ''
 
       const message = `${characters[caller].name} ${characters[callee].name} ${called}の呼称を追加しますか？`
       if(window.confirm(message)) {

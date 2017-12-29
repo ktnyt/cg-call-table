@@ -84,7 +84,9 @@ class Filters extends Component {
           event.target.caller = this.refs.caller
           event.target.callee = this.refs.callee
           event.target.called = this.refs.called
-          event.target.remark = this.refs.remark
+          if(theme.full) {
+            event.target.remark = this.refs.remark
+          }
           onClick(event)
         }}>
           <i style={{ fontSize: 18 }} className='material-icons'>add</i>
