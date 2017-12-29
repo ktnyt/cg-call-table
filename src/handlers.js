@@ -45,10 +45,10 @@ class Handlers {
     })
   })
 
-  browse = () => fetch(readRequest(this.base, this.path), this.options).then(this.handleResponse)
+  browse = () => fetch(readRequest(this.base, this.path, this.options)).then(this.handleResponse)
   read = pk => fetch(readRequest(this.base, `${this.path}/${pk}`)).then(r => this.browse())
   edit = (pk, body) => fetch(patchRequest(this.base, `${this.path}/${pk}`, body)).then(r => this.browse())
-  add = (pk, body) => fetch(postRequest(this.base, `${this.path}/${pk}`, body)).then(r => this.browse())
+  add = body => fetch(postRequest(this.base, this.path, body)).then(r => this.browse())
   destroy = (pk, body) => fetch(deleteRequest(this.base, `${this.path}/${pk}`)).then(r => this.browse())
   replace = (pk, body) => fetch(putRequest(this.base, `${this.path}/${pk}`, body)).then(r => this.browse())
 }
