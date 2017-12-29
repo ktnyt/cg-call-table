@@ -1,31 +1,28 @@
-import React, { Component, Fragment } from 'react'
-import injectSheet, { ThemeProvider } from 'react-jss'
+import React, { Component } from 'react'
+import { ThemeProvider } from 'react-jss'
 
+import View from './components/View'
 import Filters from './components/Filters'
 import Table from './components/Table'
 
 import handlers from './handlers'
 
-const theme = {
+const theme = width => ({
   pallete: {
     cute: ['#f8adcc', '#fcc9de'],
     cool: ['#9ab3ff', '#ccdaff'],
     pasn: ['#fee3b3', '#feeccc'],
     rest: ['#80fba2', '#b4fcc4'],
   },
+  full: width < 600 ? false : true,
+  compact: width < 450 ? true : false,
+  width: width < 450 ? width : width < 600 ? 450 : 600,
   cell: {
     padding: 3,
-    width: 200,
+    width: Math.min(width / 3, 150),
     height: 24,
   },
-}
-
-const styles = {
-  container: {
-    margin: 'auto',
-    width: 600,
-  },
-}
+})
 
 class App extends Component {
   state = {
@@ -35,6 +32,8 @@ class App extends Component {
     caller: '',
     callee: '',
     called: '',
+    remark: '',
+    width: window.innerWidth,
   }
 
   componentWillMount = () => {
@@ -49,6 +48,8 @@ class App extends Component {
 
     this.unbind_calltable = handlers.calltable.bind(calltable => this.setState({ calltable }))
     handlers.calltable.browse()
+
+    window.onresize = () => this.setState({ width: window.innerWidth })
   }
 
   componentWillUnmount = () => {
@@ -58,8 +59,6 @@ class App extends Component {
   }
 
   render = () => {
-    const { classes } = this.props
-
     const {
       characters,
       character_readings,
@@ -67,6 +66,8 @@ class App extends Component {
       caller,
       callee,
       called,
+      remark,
+      width,
     } = this.state
 
     const ready = !!characters && !!character_readings && !!calltable
@@ -80,6 +81,7 @@ class App extends Component {
     .filter(entry => callers.includes(entry.caller))
     .filter(entry => callees.includes(entry.callee))
     .filter(entry => entry.called.match(called))
+    .filter(entry => entry.remark.match(remark))
     .map(({ id, caller, callee, called, remark }) => ({
       id,
       caller: characters[caller],
@@ -91,20 +93,40 @@ class App extends Component {
     const changeCaller = event => this.setState({ caller: event.target.value })
     const changeCallee = event => this.setState({ callee: event.target.value })
     const changeCalled = event => this.setState({ called: event.target.value })
+    const changeRemark = event => this.setState({ remark: event.target.value })
+    const handleClick = event => {
+      event.preventDefault()
+      const caller = callers[0]
+      const callee = callers[0]
+      const called = event.target.called.value
+      const remark = event.target.remark.value
+
+      const message = `${characters[caller].name} ${characters[callee].name} ${called}の呼称を追加しますか？`
+      if(window.confirm(message)) {
+        handlers.calltable.add({
+          caller,
+          callee,
+          called,
+          remark,
+        })
+      }
+    }
 
     return (
-      <ThemeProvider theme={theme}>
-        <div className={classes.container}>
+      <ThemeProvider theme={theme(width)}>
+        <View>
           <Filters
             onChangeCaller={changeCaller}
             onChangeCallee={changeCallee}
             onChangeCalled={changeCalled}
+            onChangeRemark={changeRemark}
+            onClick={handleClick}
           />
           <Table table={filtered} />
-        </div>
+        </View>
       </ThemeProvider>
     )
   }
 }
 
-export default injectSheet(styles)(App)
+export default App
