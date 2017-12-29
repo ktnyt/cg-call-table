@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import injectSheet, { withTheme } from 'react-jss'
+import injectSheet from 'react-jss'
 import moji from 'moji'
 
 import handlers from '../handlers'
@@ -130,4 +130,4 @@ class Entry extends Component {
   }
 }
 
-export default injectSheet(styles)(withTheme(Entry))
+export default injectSheet(styles)(Entry)
