@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react'
-import injectSheet, { withTheme } from 'react-jss'
+import injectSheet from 'react-jss'
 
 const style = theme => ({
   container: {
@@ -94,4 +94,4 @@ class Filters extends Component {
   }
 }
 
-export default injectSheet(style)(withTheme(Filters))
+export default injectSheet(style)(Filters)
