@@ -74,8 +74,8 @@ class App extends Component {
 
     if(!ready) return null
 
-    const callers = character_readings.filter(entry => entry.reading.match(caller)).map(entry => entry.id)
-    const callees = character_readings.filter(entry => entry.reading.match(callee)).map(entry => entry.id)
+    const callers = character_readings.filter(entry => entry.reading.match(caller)).map(entry => entry.id).sort()
+    const callees = character_readings.filter(entry => entry.reading.match(callee)).map(entry => entry.id).sort()
 
     const filtered = calltable
     .filter(entry => callers.includes(entry.caller))
