@@ -1,6 +1,6 @@
 {
   "name": "cg-call-table",
-  "version": "1.0.1",
+  "version": "1.0.0-rc",
   "private": true,
   "dependencies": {
     "moji": "^0.5.1",
