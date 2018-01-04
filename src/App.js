@@ -6,6 +6,7 @@ import Filters from './components/Filters'
 import Table from './components/Table'
 
 import handlers from './handlers'
+import { getCache } from './caching'
 
 const theme = width => ({
   pallete: {
@@ -25,15 +26,16 @@ const theme = width => ({
 })
 
 class App extends Component {
-  state = {
-    characters: false,
-    character_readings: false,
-    calltable: false,
-    caller: '',
-    callee: '',
-    called: '',
-    remark: '',
-    width: window.innerWidth,
+  constructor(props) {
+    super(props)
+    this.state = {
+      ...getCache(),
+      caller: '',
+      callee: '',
+      called: '',
+      remark: '',
+      width: window.innerWidth,
+    }
   }
 
   componentWillMount = () => {
@@ -45,6 +47,15 @@ class App extends Component {
 
     this.unbind_character_readings = handlers.character_readings.bind(character_readings => this.setState({ character_readings }))
     handlers.character_readings.browse()
+
+    this.unbind_units = handlers.units.bind(data => {
+      const units = data.map(({ id, ...rest }) => ({ [id]: rest })).reduce((prev, next) => ({ ...prev, ...next }))
+      this.setState({ units })
+    })
+    handlers.units.browse()
+
+    this.unbind_unit_readings = handlers.unit_readings.bind(unit_readings => this.setState({ unit_readings }))
+    handlers.unit_readings.browse()
 
     this.unbind_calltable = handlers.calltable.bind(calltable => this.setState({ calltable }))
     handlers.calltable.browse()
@@ -62,6 +73,8 @@ class App extends Component {
     const {
       characters,
       character_readings,
+      units,
+      unit_readings,
       calltable,
       caller,
       callee,
@@ -70,12 +83,16 @@ class App extends Component {
       width,
     } = this.state
 
-    const ready = !!characters && !!character_readings && !!calltable
+    const ready = [characters, character_readings, units, unit_readings, calltable].filter(data => data === null).length === 0
 
     if(!ready) return null
 
-    const callers = character_readings.filter(entry => entry.reading.match(caller)).map(entry => entry.id).sort()
-    const callees = character_readings.filter(entry => entry.reading.match(callee)).map(entry => entry.id).sort()
+    const filterReading = (value, readings) => readings.filter(entry => entry.reading.match(value)).map(entry => entry.id)
+    const filterCharacters = value => filterReading(value, character_readings).sort()
+    const filterUnits = value => filterReading(value, unit_readings).map(unit => units[unit].members).reduce((p, n) => ([ ...p, ...n ]), [])
+
+    const callers = [ ...filterCharacters(caller), ...filterUnits(caller) ]
+    const callees = [ ...filterCharacters(callee), ...filterUnits(callee) ]
 
     const filtered = calltable
     .filter(entry => callers.includes(entry.caller))
