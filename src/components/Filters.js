@@ -63,20 +63,44 @@ class Filters extends Component {
     return (
       <Fragment>
         <div className={classes.container}>
-          <input type='text' ref='caller' className={classes.input} onChange={onChangeCaller} />
+          <input
+            type='text'
+            ref='caller'
+            className={classes.input}
+            placeholder='呼ぶ側'
+            onChange={onChangeCaller}
+          />
         </div>
     
         <div className={classes.container}>
-          <input type='text' ref='callee' className={classes.input} onChange={onChangeCallee} />
+          <input
+            type='text'
+            ref='callee'
+            className={classes.input}
+            placeholder='呼ばれる側'
+            onChange={onChangeCallee}
+          />
         </div>
     
         <div className={classes.called}>
-          <input type='text' ref='called' className={classes.input} onChange={onChangeCalled} />
+          <input
+            type='text'
+            ref='called'
+            className={classes.input}
+            placeholder='呼び方'
+            onChange={onChangeCalled}
+          />
         </div>
     
         {theme.full && (
           <div className={classes.remark}>
-            <input type='text' ref='remark' className={classes.input} onChange={onChangeRemark} />
+            <input
+              type='text'
+              ref='remark'
+              className={classes.input}
+              placeholder='備考'
+              onChange={onChangeRemark}
+            />
           </div>
         )}
     
