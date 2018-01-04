@@ -67,12 +67,13 @@ class Filters extends Component {
             type='text'
             ref='caller'
             className={classes.input}
+            tabIndex={1}
             placeholder='呼ぶ側'
             onChange={onChangeCaller}
           />
         </div>
 
-        <button className={classes.button} onClick={event => {
+        <button className={classes.button} tabIndex={6} onClick={event => {
           const caller = this.refs.caller.value
           const callee = this.refs.callee.value
           this.refs.caller.value = callee
@@ -90,6 +91,7 @@ class Filters extends Component {
             type='text'
             ref='callee'
             className={classes.input}
+            tabIndex={2}
             placeholder='呼ばれる側'
             onChange={onChangeCallee}
           />
@@ -100,6 +102,7 @@ class Filters extends Component {
             type='text'
             ref='called'
             className={classes.input}
+            tabIndex={3}
             placeholder='呼び方'
             onChange={onChangeCalled}
           />
@@ -111,13 +114,14 @@ class Filters extends Component {
               type='text'
               ref='remark'
               className={classes.input}
+              tabIndex={4}
               placeholder='備考'
               onChange={onChangeRemark}
             />
           </div>
         )}
     
-        <button className={classes.button} onClick={event => {
+        <button className={classes.button} tabIndex={5} onClick={event => {
           event.target.caller = this.refs.caller
           event.target.callee = this.refs.callee
           event.target.called = this.refs.called
