@@ -97,7 +97,7 @@ class App extends Component {
     const handleClick = event => {
       event.preventDefault()
       const caller = callers[0]
-      const callee = callers[0]
+      const callee = callees[0]
       const called = event.target.called.value
       const remark = theme.full ? event.target.remark.value : ''
 
