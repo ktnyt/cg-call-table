@@ -89,7 +89,7 @@ class App extends Component {
 
     const filterReading = (value, readings) => readings.filter(entry => entry.reading.match(value)).map(entry => entry.id)
     const filterCharacters = value => filterReading(value, character_readings).sort()
-    const filterUnits = value => filterReading(value, unit_readings).map(unit => units[unit].members).reduce((p, n) => ([ ...p, ...n ]))
+    const filterUnits = value => filterReading(value, unit_readings).map(unit => units[unit].members).reduce((p, n) => ([ ...p, ...n ]), [])
 
     const callers = [ ...filterCharacters(caller), ...filterUnits(caller) ]
     const callees = [ ...filterCharacters(callee), ...filterUnits(callee) ]
