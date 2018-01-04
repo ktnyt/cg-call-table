@@ -6,6 +6,7 @@ import Filters from './components/Filters'
 import Table from './components/Table'
 
 import handlers from './handlers'
+import { getCache } from './caching'
 
 const theme = width => ({
   pallete: {
@@ -25,15 +26,16 @@ const theme = width => ({
 })
 
 class App extends Component {
-  state = {
-    characters: false,
-    character_readings: false,
-    calltable: false,
-    caller: '',
-    callee: '',
-    called: '',
-    remark: '',
-    width: window.innerWidth,
+  constructor(props) {
+    super(props)
+    this.state = {
+      ...getCache(),
+      caller: '',
+      callee: '',
+      called: '',
+      remark: '',
+      width: window.innerWidth,
+    }
   }
 
   componentWillMount = () => {
@@ -70,7 +72,7 @@ class App extends Component {
       width,
     } = this.state
 
-    const ready = !!characters && !!character_readings && !!calltable
+    const ready = characters !== null && character_readings !== null && calltable !== null
 
     if(!ready) return null
 
