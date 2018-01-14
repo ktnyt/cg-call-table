@@ -1,11 +1,9 @@
 import handlers from './handlers'
 
-const dictify = data => data.map(({ id, ...rest }) => ({ [id]: rest })).reduce((prev, next) => ({ ...prev, ...next }))
+const version = '1.0.0'
 
-handlers.characters.bind(data => localStorage.setItem('characters', JSON.stringify(dictify(data))))
-handlers.character_readings.bind(data => localStorage.setItem('character_readings', JSON.stringify(data)))
-handlers.units.bind(data => localStorage.setItem('units', JSON.stringify(dictify(data))))
-handlers.unit_readings.bind(data => localStorage.setItem('unit_readings', JSON.stringify(data)))
+handlers.characters.bind(data => localStorage.setItem('characters', JSON.stringify(data)))
+handlers.units.bind(data => localStorage.setItem('units', JSON.stringify(data)))
 handlers.calltable.bind(data => localStorage.setItem('calltable', JSON.stringify(data)))
 
 const getItem = key => {
@@ -17,11 +15,18 @@ const getItem = key => {
 }
 
 export const getCache = () => {
+  const cacheVersion = localStorage.getItem('version')
+  if(cacheVersion !== version) {
+    return {
+      characters: null,
+      units: null,
+      calltable:null,
+    }
+    localStorage.setItem('version', version)
+  }
   return {
     characters: getItem('characters'),
-    character_readings: getItem('character_readings'),
     units: getItem('units'),
-    unit_readings: getItem('unit_readings'),
     calltable: getItem('calltable'),
   }
 }
