@@ -55,15 +55,11 @@ class Handlers {
 
 const base = 'https://api.imascg.moe'
 const characters = new Handlers(base, 'characters')
-const character_readings = new Handlers(base, 'characters/readings')
 const units = new Handlers(base, 'units')
-const unit_readings = new Handlers(base, 'units/readings')
 const calltable = new Handlers(base, 'calltable')
 
 export default {
   characters,
-  character_readings,
   units,
-  unit_readings,
   calltable,
 }

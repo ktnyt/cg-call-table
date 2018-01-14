@@ -39,23 +39,11 @@ class App extends Component {
   }
 
   componentWillMount = () => {
-    this.unbind_characters = handlers.characters.bind(data => {
-      const characters = data.map(({ id, ...rest }) => ({ [id]: rest })).reduce((prev, next) => ({ ...prev, ...next }))
-      this.setState({ characters })
-    })
+    this.unbind_characters = handlers.characters.bind(characters => this.setState({ characters }))
     handlers.characters.browse()
 
-    this.unbind_character_readings = handlers.character_readings.bind(character_readings => this.setState({ character_readings }))
-    handlers.character_readings.browse()
-
-    this.unbind_units = handlers.units.bind(data => {
-      const units = data.map(({ id, ...rest }) => ({ [id]: rest })).reduce((prev, next) => ({ ...prev, ...next }))
-      this.setState({ units })
-    })
+    this.unbind_units = handlers.units.bind(units => this.setState({ units }))
     handlers.units.browse()
-
-    this.unbind_unit_readings = handlers.unit_readings.bind(unit_readings => this.setState({ unit_readings }))
-    handlers.unit_readings.browse()
 
     this.unbind_calltable = handlers.calltable.bind(calltable => this.setState({ calltable }))
     handlers.calltable.browse()
@@ -64,17 +52,15 @@ class App extends Component {
   }
 
   componentWillUnmount = () => {
-    this.unbind_characters()
-    this.unbind_character_readings()
     this.unbind_calltable()
+    this.unbind_units()
+    this.unbind_characters()
   }
 
   render = () => {
     const {
       characters,
-      character_readings,
       units,
-      unit_readings,
       calltable,
       caller,
       callee,
@@ -83,13 +69,13 @@ class App extends Component {
       width,
     } = this.state
 
-    const ready = [characters, character_readings, units, unit_readings, calltable].filter(data => data === null).length === 0
+    const ready = [characters, units, calltable].filter(data => data === null).length === 0
 
     if(!ready) return null
 
-    const filterReading = (value, readings) => readings.filter(entry => entry.reading.match(value)).map(entry => entry.id)
-    const filterCharacters = value => filterReading(value, character_readings).sort()
-    const filterUnits = value => filterReading(value, unit_readings).map(unit => units[unit].members).reduce((p, n) => ([ ...p, ...n ]), [])
+    const filterReading = (value, collection) => collection.filter(entry => entry.readings.filter(reading => reading.match(value)).length > 0)
+    const filterCharacters = value => filterReading(value, characters).map(entry => entry.id).sort()
+    const filterUnits = value => filterReading(value, units).map(unit => unit.members).reduce((p, n) => ([ ...p, ...n ]), [])
 
     const callers = [ ...filterCharacters(caller), ...filterUnits(caller) ]
     const callees = [ ...filterCharacters(callee), ...filterUnits(callee) ]
@@ -101,8 +87,8 @@ class App extends Component {
     .filter(entry => entry.remark.match(remark))
     .map(({ id, caller, callee, called, remark }) => ({
       id,
-      caller: characters[caller],
-      callee: characters[callee],
+      caller: characters.find(character => character.id === caller),
+      callee: characters.find(character => character.id === callee),
       called,
       remark,
     }))
